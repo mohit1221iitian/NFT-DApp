@@ -14,10 +14,10 @@ export const resolveIPFS = (ipfsUrl, fallbackIndex = 0) => {
   return `${fallbackGateways[fallbackIndex]}${cidPath}`;
 };
 
-const BurnNFT = ({ contract, userAddress }) => {
+const BurnNFT = ({ contract, account }) => {
   const [tokenId, setTokenId] = useState("");
   const [preview, setPreview] = useState("");
-  const [ownershipMessage, setOwnershipMessage] = useState("");
+  const [tokenStatus, setTokenStatus] = useState(""); // To hold the availability message
 
   useEffect(() => {
     const fetchMetadata = async () => {
@@ -38,41 +38,49 @@ const BurnNFT = ({ contract, userAddress }) => {
         setPreview("");
       }
     };
-
     fetchMetadata();
   }, [tokenId, contract]);
 
-  const checkOwnership = async () => {
-    if (!tokenId || !contract || !userAddress) return;
+  const checkTokenOwnership = async () => {
+    if (!tokenId || !contract || !account) return;
 
     try {
+      // Check if the user is the owner of the token
       const owner = await contract.ownerOf(tokenId);
-      if (owner.toLowerCase() === userAddress.toLowerCase()) {
-        setOwnershipMessage("✅ You are the owner of this NFT.");
+      if (owner.toLowerCase() === account.toLowerCase()) {
+        setTokenStatus("✅ You are the owner. You can burn this token.");
       } else {
-        setOwnershipMessage("❌ You are not the owner of this NFT.");
+        setTokenStatus("❌ You are not the owner of this token.");
       }
     } catch (err) {
-      setOwnershipMessage("❌ Invalid Token ID or NFT does not exist.");
+      if (err.message.includes("ERC721: invalid token ID")) {
+        setTokenStatus("❌ Token ID does not exist.");
+      } else {
+        setTokenStatus("⚠️ Error checking token ownership. Please try again.");
+      }
     }
   };
 
   const burn = async () => {
-    if (!tokenId || !contract || !userAddress) return;
+    if (!tokenId || !contract || !account) {
+      alert("Enter Token ID");
+      return;
+    }
 
     try {
+      // Check if the user is the owner before burning
       const owner = await contract.ownerOf(tokenId);
-      if (owner.toLowerCase() !== userAddress.toLowerCase()) {
-        alert("❌ You are not the owner of this NFT!");
+      if (owner.toLowerCase() !== account.toLowerCase()) {
+        alert("❌ You are not the owner of this token.");
         return;
       }
 
+      // Proceed to burn the token
       const tx = await contract.burn(tokenId);
       await tx.wait();
       alert("🔥 NFT burned successfully!");
       setTokenId("");
       setPreview("");
-      setOwnershipMessage("");
     } catch (err) {
       console.error(err);
       alert("❌ Burn failed. See console for details.");
@@ -103,7 +111,8 @@ const BurnNFT = ({ contract, userAddress }) => {
         value={tokenId}
         onChange={(e) => {
           setTokenId(e.target.value);
-          setOwnershipMessage(""); // Reset message on token ID change
+          setTokenStatus(""); // Reset the token status message
+          checkTokenOwnership(); // Check ownership on each change
         }}
         placeholder="Token ID"
         style={{
@@ -114,12 +123,6 @@ const BurnNFT = ({ contract, userAddress }) => {
           border: "1px solid #ccc",
         }}
       />
-
-      {ownershipMessage && (
-        <p style={{ fontSize: "14px", color: ownershipMessage.startsWith("✅") ? "#2ecc71" : "#e74c3c" }}>
-          {ownershipMessage}
-        </p>
-      )}
 
       {preview && (
         <>
@@ -141,11 +144,14 @@ const BurnNFT = ({ contract, userAddress }) => {
         </>
       )}
 
+      {tokenStatus && (
+        <p style={{ fontSize: "14px", color: tokenStatus.includes("❌") ? "#e74c3c" : "#2ecc71" }}>
+          {tokenStatus}
+        </p>
+      )}
+
       <button
-        onClick={() => {
-          checkOwnership();
-          burn();
-        }}
+        onClick={burn}
         style={{
           width: "100%",
           padding: "10px",
@@ -156,7 +162,7 @@ const BurnNFT = ({ contract, userAddress }) => {
           cursor: "pointer",
         }}
       >
-        Burn
+        Burn NFT
       </button>
     </div>
   );
