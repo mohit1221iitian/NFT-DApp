@@ -14,10 +14,10 @@ export const resolveIPFS = (ipfsUrl, fallbackIndex = 0) => {
   return `${fallbackGateways[fallbackIndex]}${cidPath}`;
 };
 
-
-const BurnNFT = ({ contract }) => {
+const BurnNFT = ({ contract, userAddress }) => {
   const [tokenId, setTokenId] = useState("");
   const [preview, setPreview] = useState("");
+  const [ownershipMessage, setOwnershipMessage] = useState("");
 
   useEffect(() => {
     const fetchMetadata = async () => {
@@ -38,16 +38,41 @@ const BurnNFT = ({ contract }) => {
         setPreview("");
       }
     };
+
     fetchMetadata();
   }, [tokenId, contract]);
 
-  const burn = async () => {
+  const checkOwnership = async () => {
+    if (!tokenId || !contract || !userAddress) return;
+
     try {
+      const owner = await contract.ownerOf(tokenId);
+      if (owner.toLowerCase() === userAddress.toLowerCase()) {
+        setOwnershipMessage("✅ You are the owner of this NFT.");
+      } else {
+        setOwnershipMessage("❌ You are not the owner of this NFT.");
+      }
+    } catch (err) {
+      setOwnershipMessage("❌ Invalid Token ID or NFT does not exist.");
+    }
+  };
+
+  const burn = async () => {
+    if (!tokenId || !contract || !userAddress) return;
+
+    try {
+      const owner = await contract.ownerOf(tokenId);
+      if (owner.toLowerCase() !== userAddress.toLowerCase()) {
+        alert("❌ You are not the owner of this NFT!");
+        return;
+      }
+
       const tx = await contract.burn(tokenId);
       await tx.wait();
       alert("🔥 NFT burned successfully!");
       setTokenId("");
       setPreview("");
+      setOwnershipMessage("");
     } catch (err) {
       console.error(err);
       alert("❌ Burn failed. See console for details.");
@@ -71,12 +96,15 @@ const BurnNFT = ({ contract }) => {
     >
       <h2 style={{ color: "#cc0000", marginBottom: "4px" }}>Burn NFT</h2>
       <p style={{ fontSize: "12px", color: "#666", marginBottom: "10px" }}>
-        Enter the Token ID of the NFT you want to burn.You must be its owner.
+        Enter the Token ID of the NFT you want to burn. You must be its owner.
       </p>
 
       <input
         value={tokenId}
-        onChange={(e) => setTokenId(e.target.value)}
+        onChange={(e) => {
+          setTokenId(e.target.value);
+          setOwnershipMessage(""); // Reset message on token ID change
+        }}
         placeholder="Token ID"
         style={{
           width: "100%",
@@ -86,6 +114,12 @@ const BurnNFT = ({ contract }) => {
           border: "1px solid #ccc",
         }}
       />
+
+      {ownershipMessage && (
+        <p style={{ fontSize: "14px", color: ownershipMessage.startsWith("✅") ? "#2ecc71" : "#e74c3c" }}>
+          {ownershipMessage}
+        </p>
+      )}
 
       {preview && (
         <>
@@ -108,7 +142,10 @@ const BurnNFT = ({ contract }) => {
       )}
 
       <button
-        onClick={burn}
+        onClick={() => {
+          checkOwnership();
+          burn();
+        }}
         style={{
           width: "100%",
           padding: "10px",

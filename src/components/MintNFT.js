@@ -14,65 +14,71 @@ export const resolveIPFS = (ipfsUrl, fallbackIndex = 0) => {
   return `${fallbackGateways[fallbackIndex]}${cidPath}`;
 };
 
-
 const MintNFT = ({ contract }) => {
   const [ipfsURL, setIpfsURL] = useState("");
   const [preview, setPreview] = useState("");
   const [tokenId, setTokenId] = useState("");
+  const [tokenExists, setTokenExists] = useState(null);
 
   useEffect(() => {
     const fetchImageFromMetadata = async () => {
       if (!ipfsURL) return;
-      const metadataURL = resolveIPFS(ipfsURL); // Convert ipfs://.. to https://..
-    
+      const metadataURL = resolveIPFS(ipfsURL);
+
       try {
         const res = await fetch(metadataURL);
         const data = await res.json();
-    
-        // Replace IPFS-style links with resolved URLs
-        const imageURL = resolveIPFS(data.image || ""); // Converts ipfs://... to HTTP
-    
+        const imageURL = resolveIPFS(data.image || "");
         setPreview(imageURL);
       } catch (err) {
         console.error("Failed to load image from metadata:", err);
         setPreview("");
       }
     };
-    
     fetchImageFromMetadata();
   }, [ipfsURL]);
+
+  useEffect(() => {
+    const checkToken = async () => {
+      if (!tokenId || !contract) return;
+      try {
+        await contract.ownerOf(tokenId);
+        setTokenExists(true);
+      } catch (err) {
+        if (
+          err.message.includes("invalid token ID") ||
+          err.message.includes("nonexistent")
+        ) {
+          setTokenExists(false);
+        } else {
+          setTokenExists(null);
+        }
+      }
+    };
+    checkToken();
+  }, [tokenId, contract]);
 
   const mintNFT = async () => {
     if (!ipfsURL || !tokenId) {
       alert("Enter Token ID and Metadata URI");
       return;
     }
-  
-    const resolvedURI = resolveIPFS(ipfsURL);
-  
-    try {
-      // Check if token ID already exists
-      await contract.ownerOf(tokenId);
+    if (tokenExists) {
       alert("❌ Token ID already exists. Choose a different one.");
       return;
-    } catch (err) {
-      // Only proceed if the error is due to non-existent token
-      if (err.message.includes("ERC721: invalid token ID") || err.message.includes("nonexistent")) {
-        try {
-          const tx = await contract.safeMint(tokenId, resolvedURI);
-          await tx.wait();
-          alert("✅ NFT Minted!");
-        } catch (mintErr) {
-          console.error(mintErr);
-          alert("❌ Minting failed.");
-        }
-      } else {
-        console.error("Error checking token existence:", err);
-        alert("⚠️ Unexpected error. Check console.");
-      }
+    }
+
+    const resolvedURI = resolveIPFS(ipfsURL);
+
+    try {
+      const tx = await contract.safeMint(tokenId, resolvedURI);
+      await tx.wait();
+      alert("✅ NFT Minted!");
+    } catch (mintErr) {
+      console.error(mintErr);
+      alert("❌ Minting failed.");
     }
   };
-  
 
   return (
     <div
@@ -103,9 +109,17 @@ const MintNFT = ({ contract }) => {
           border: "1px solid #ccc",
         }}
       />
-      <p style={{ fontSize: "12px", color: "#555", marginBottom: "10px" }}>
-                Token ID should be unique.(eg. 1,2,..)
-      </p>
+      {tokenId && (
+        <p
+          style={{
+            fontSize: "12px",
+            color: tokenExists ? "red" : "green",
+            marginBottom: "10px",
+          }}
+        >
+          {tokenExists ? "❌ Token ID already exists" : "✅ Token ID is available"}
+        </p>
+      )}
 
       <input
         value={ipfsURL}
@@ -125,7 +139,9 @@ const MintNFT = ({ contract }) => {
 
       {preview && (
         <>
-          <h4 style={{ textAlign: "center", color: "#333", marginBottom: "6px" }}>
+          <h4
+            style={{ textAlign: "center", color: "#333", marginBottom: "6px" }}
+          >
             Preview NFT
           </h4>
           <img
