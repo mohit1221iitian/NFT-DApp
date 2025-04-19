@@ -1,11 +1,18 @@
 import { useEffect, useState } from "react";
 
-const convertIPFSToHttp = (url) => {
-  if (!url) return "";
-  return url.startsWith("ipfs://")
-    ? url.replace("ipfs://", "https://ipfs.io/ipfs/")
-    : url;
+const fallbackGateways = [
+  "https://nftstorage.link/ipfs/",
+  "https://gateway.pinata.cloud/ipfs/",
+  "https://ipfs.io/ipfs/",
+  "https://cloudflare-ipfs.com/ipfs/"
+];
+
+const convertIPFSToHttp = (url, fallbackIndex = 0) => {
+  if (!url || !url.startsWith("ipfs://")) return url;
+  const cidPath = url.split("ipfs://")[1];
+  return `${fallbackGateways[fallbackIndex]}${cidPath}`;
 };
+
 
 const ViewNFTs = ({ contract, address }) => {
   const [nfts, setNfts] = useState([]);

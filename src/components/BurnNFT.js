@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
 
 // Fallback IPFS gateways
-const fallbackGateways = [
-  "https://gateway.pinata.cloud/ipfs/",
+export const fallbackGateways = [
   "https://nftstorage.link/ipfs/",
+  "https://gateway.pinata.cloud/ipfs/",
+  "https://ipfs.io/ipfs/",
   "https://cloudflare-ipfs.com/ipfs/"
 ];
 
-// Resolve ipfs://... to https://gateway/...
-const resolveIPFS = (ipfsUrl, fallbackIndex = 0) => {
-  if (!ipfsUrl.startsWith("ipfs://")) return ipfsUrl;
+export const resolveIPFS = (ipfsUrl, fallbackIndex = 0) => {
+  if (!ipfsUrl?.startsWith("ipfs://")) return ipfsUrl;
   const cidPath = ipfsUrl.split("ipfs://")[1];
   return `${fallbackGateways[fallbackIndex]}${cidPath}`;
 };
+
 
 const BurnNFT = ({ contract }) => {
   const [tokenId, setTokenId] = useState("");
@@ -70,7 +71,7 @@ const BurnNFT = ({ contract }) => {
     >
       <h2 style={{ color: "#cc0000", marginBottom: "4px" }}>Burn NFT</h2>
       <p style={{ fontSize: "12px", color: "#666", marginBottom: "10px" }}>
-        Enter the Token ID of the NFT you want to burn.
+        Enter the Token ID of the NFT you want to burn.You must be its owner.
       </p>
 
       <input

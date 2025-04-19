@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
 
 // Fallback IPFS gateways
-const fallbackGateways = [
-  "https://gateway.pinata.cloud/ipfs/",
+export const fallbackGateways = [
   "https://nftstorage.link/ipfs/",
+  "https://gateway.pinata.cloud/ipfs/",
+  "https://ipfs.io/ipfs/",
   "https://cloudflare-ipfs.com/ipfs/"
 ];
 
-// Resolve ipfs://... to https://gateway/...
-const resolveIPFS = (ipfsUrl, fallbackIndex = 0) => {
-  if (!ipfsUrl.startsWith("ipfs://")) return ipfsUrl;
+export const resolveIPFS = (ipfsUrl, fallbackIndex = 0) => {
+  if (!ipfsUrl?.startsWith("ipfs://")) return ipfsUrl;
   const cidPath = ipfsUrl.split("ipfs://")[1];
   return `${fallbackGateways[fallbackIndex]}${cidPath}`;
 };
+
 
 const MintNFT = ({ contract }) => {
   const [ipfsURL, setIpfsURL] = useState("");
@@ -22,21 +23,22 @@ const MintNFT = ({ contract }) => {
   useEffect(() => {
     const fetchImageFromMetadata = async () => {
       if (!ipfsURL) return;
-      const metadataURL = resolveIPFS(ipfsURL);
+      const metadataURL = resolveIPFS(ipfsURL); // Convert ipfs://.. to https://..
+    
       try {
         const res = await fetch(metadataURL);
         const data = await res.json();
-        if (data.image) {
-          const imageURL = resolveIPFS(data.image);
-          setPreview(imageURL);
-        } else {
-          setPreview("");
-        }
+    
+        // Replace IPFS-style links with resolved URLs
+        const imageURL = resolveIPFS(data.image || ""); // Converts ipfs://... to HTTP
+    
+        setPreview(imageURL);
       } catch (err) {
         console.error("Failed to load image from metadata:", err);
         setPreview("");
       }
     };
+    
     fetchImageFromMetadata();
   }, [ipfsURL]);
 
@@ -45,17 +47,32 @@ const MintNFT = ({ contract }) => {
       alert("Enter Token ID and Metadata URI");
       return;
     }
-
+  
     const resolvedURI = resolveIPFS(ipfsURL);
+  
     try {
-      const tx = await contract.safeMint(tokenId, resolvedURI);
-      await tx.wait();
-      alert("✅ NFT Minted!");
+      // Check if token ID already exists
+      await contract.ownerOf(tokenId);
+      alert("❌ Token ID already exists. Choose a different one.");
+      return;
     } catch (err) {
-      alert("❌ Minting failed. Check console.");
-      console.error(err);
+      // Only proceed if the error is due to non-existent token
+      if (err.message.includes("ERC721: invalid token ID") || err.message.includes("nonexistent")) {
+        try {
+          const tx = await contract.safeMint(tokenId, resolvedURI);
+          await tx.wait();
+          alert("✅ NFT Minted!");
+        } catch (mintErr) {
+          console.error(mintErr);
+          alert("❌ Minting failed.");
+        }
+      } else {
+        console.error("Error checking token existence:", err);
+        alert("⚠️ Unexpected error. Check console.");
+      }
     }
   };
+  
 
   return (
     <div
