@@ -18,65 +18,74 @@ const MintNFT = ({ contract }) => {
   const [ipfsURL, setIpfsURL] = useState("");
   const [preview, setPreview] = useState("");
   const [tokenId, setTokenId] = useState("");
-  const [tokenExists, setTokenExists] = useState(null);
+  const [tokenStatus, setTokenStatus] = useState(""); // To hold the availability message
 
   useEffect(() => {
     const fetchImageFromMetadata = async () => {
       if (!ipfsURL) return;
-      const metadataURL = resolveIPFS(ipfsURL);
-
+      const metadataURL = resolveIPFS(ipfsURL); // Convert ipfs://.. to https://..
+    
       try {
         const res = await fetch(metadataURL);
         const data = await res.json();
-        const imageURL = resolveIPFS(data.image || "");
+    
+        // Replace IPFS-style links with resolved URLs
+        const imageURL = resolveIPFS(data.image || ""); // Converts ipfs://... to HTTP
+    
         setPreview(imageURL);
       } catch (err) {
         console.error("Failed to load image from metadata:", err);
         setPreview("");
       }
     };
+    
     fetchImageFromMetadata();
   }, [ipfsURL]);
 
-  useEffect(() => {
-    const checkToken = async () => {
-      if (!tokenId || !contract) return;
-      try {
-        await contract.ownerOf(tokenId);
-        setTokenExists(true);
-      } catch (err) {
-        if (
-          err.message.includes("invalid token ID") ||
-          err.message.includes("nonexistent")
-        ) {
-          setTokenExists(false);
-        } else {
-          setTokenExists(null);
-        }
+  const checkTokenAvailability = async () => {
+    if (!tokenId || !contract) return;
+
+    try {
+      // Check if the tokenId exists by calling ownerOf
+      await contract.ownerOf(tokenId);
+      setTokenStatus("❌ Token ID already exists. Choose a different one.");
+    } catch (err) {
+      if (err.message.includes("ERC721: invalid token ID")) {
+        setTokenStatus("✅ Token ID is available for minting.");
+      } else {
+        setTokenStatus("⚠️ Error checking token status. Please try again.");
       }
-    };
-    checkToken();
-  }, [tokenId, contract]);
+    }
+  };
 
   const mintNFT = async () => {
     if (!ipfsURL || !tokenId) {
       alert("Enter Token ID and Metadata URI");
       return;
     }
-    if (tokenExists) {
+  
+    const resolvedURI = resolveIPFS(ipfsURL);
+  
+    try {
+      // Check if token ID already exists before minting
+      await contract.ownerOf(tokenId);
       alert("❌ Token ID already exists. Choose a different one.");
       return;
-    }
-
-    const resolvedURI = resolveIPFS(ipfsURL);
-
-    try {
-      const tx = await contract.safeMint(tokenId, resolvedURI);
-      await tx.wait();
-      alert("✅ NFT Minted!");
-    } catch (mintErr) {
-      console.error(mintErr);
-      alert("❌ Minting failed.");
+    } catch (err) {
+      // Only proceed if the error is due to non-existent token
+      if (err.message.includes("ERC721: invalid token ID") || err.message.includes("nonexistent")) {
+        try {
+          const tx = await contract.safeMint(tokenId, resolvedURI);
+          await tx.wait();
+          alert("✅ NFT Minted!");
+        } catch (mintErr) {
+          console.error(mintErr);
+          alert("❌ Minting failed.");
+        }
+      } else {
+        console.error("Error checking token existence:", err);
+        alert("⚠️ Unexpected error. Check console.");
+      }
     }
   };
 
@@ -99,7 +108,11 @@ const MintNFT = ({ contract }) => {
 
       <input
         value={tokenId}
-        onChange={(e) => setTokenId(e.target.value)}
+        onChange={(e) => {
+          setTokenId(e.target.value);
+          setTokenStatus(""); // Reset the token status message
+          checkTokenAvailability(); // Check availability on each change
+        }}
         placeholder="Token ID"
         style={{
           width: "100%",
@@ -109,17 +122,9 @@ const MintNFT = ({ contract }) => {
           border: "1px solid #ccc",
         }}
       />
-      {tokenId && (
-        <p
-          style={{
-            fontSize: "12px",
-            color: tokenExists ? "red" : "green",
-            marginBottom: "10px",
-          }}
-        >
-          {tokenExists ? "❌ Token ID already exists" : "✅ Token ID is available"}
-        </p>
-      )}
+      <p style={{ fontSize: "12px", color: "#555", marginBottom: "10px" }}>
+        Token ID should be unique.(e.g., 1, 2, 3,...)
+      </p>
 
       <input
         value={ipfsURL}
@@ -139,9 +144,7 @@ const MintNFT = ({ contract }) => {
 
       {preview && (
         <>
-          <h4
-            style={{ textAlign: "center", color: "#333", marginBottom: "6px" }}
-          >
+          <h4 style={{ textAlign: "center", color: "#333", marginBottom: "6px" }}>
             Preview NFT
           </h4>
           <img
@@ -157,6 +160,12 @@ const MintNFT = ({ contract }) => {
             }}
           />
         </>
+      )}
+
+      {tokenStatus && (
+        <p style={{ fontSize: "14px", color: tokenStatus.includes("❌") ? "#e74c3c" : "#2ecc71" }}>
+          {tokenStatus}
+        </p>
       )}
 
       <button
