@@ -3,9 +3,12 @@ import { useEffect, useState } from "react";
 // Helper to convert ipfs:// to HTTPS gateway
 const convertIPFSToHttp = (url) => {
   if (!url) return "";
-  return url.startsWith("ipfs://")
-    ? url.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/")
-    : url.replace("https://gateway.pinata.cloud/ipfs/", "https://cloudflare-ipfs.com/ipfs/");
+  if (url.startsWith("ipfs://")) {
+    return url.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
+  } else if (url.startsWith("https://gateway.pinata.cloud/ipfs/")) {
+    return url.replace("https://gateway.pinata.cloud/ipfs/", "https://cloudflare-ipfs.com/ipfs/");
+  }
+  return url; // Return the original URL if it doesn't match any known patterns
 };
 
 
