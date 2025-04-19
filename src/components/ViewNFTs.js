@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+// Helper to convert ipfs:// to HTTPS gateway
 const convertIPFSToHttp = (url) => {
   if (!url) return "";
   return url.startsWith("ipfs://")
@@ -24,7 +25,9 @@ const ViewNFTs = ({ contract, address }) => {
           const tokenURI = await contract.tokenURI(tokenId);
           const fixedTokenURI = convertIPFSToHttp(tokenURI);
 
-          const response = await fetch(fixedTokenURI);
+          // Use the proxy API to fetch metadata
+          const metadataURL = `/api/proxy?url=${encodeURIComponent(fixedTokenURI)}`;
+          const response = await fetch(metadataURL);
           const metadata = await response.json();
           const imageUrl = convertIPFSToHttp(metadata.image);
 
