@@ -28,6 +28,7 @@ const ViewNFTs = ({ contract, address }) => {
 
           // Use the proxy API to fetch metadata
           const metadataURL = `/api/proxy?url=${encodeURIComponent(fixedTokenURI)}`;
+          console.log("Fetching metadata from:", metadataURL);
           const response = await fetch(metadataURL);
           const metadata = await response.json();
           const imageUrl = convertIPFSToHttp(metadata.image);
