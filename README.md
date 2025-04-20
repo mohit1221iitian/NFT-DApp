@@ -1,70 +1,164 @@
-# Getting Started with Create React App
+# 🖼️ NFT-dapp – Mint, Preview & Burn NFTs on Avalanche C-Chain
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Welcome to **NFT-dapp** , a full-stack decentralized application that lets users preview, mint, and burn NFTs on the **Avalanche C-Chain**. With real-time wallet integration and an intuitive interface, users can manage their NFTs seamlessly. The dApp also features a dynamic gallery to view all NFTs owned by the connected address.
 
-## Available Scripts
+## 📖 Description
 
-In the project directory, you can run:
+- NFT-dapp allows users to create, preview, and manage NFTs directly on the Avalanche blockchain. Before minting an NFT, users can preview how it will look by supplying a token ID and IPFS metadata link (e.g., ipfs://Qm.../1.json). The app fetches and renders metadata (image, name, description) in real-time.
 
-### `npm start`
+- Additionally, NFT holders can securely burn their tokens, with a strict on-chain check ensuring only the rightful owner can perform the deletion. A visual NFT gallery allows users to explore all their tokens minted via this dApp, creating a seamless and interactive NFT experience.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+> 🔥 Built using React, OpenZeppelin, Remix, and IPFS. Hosted on [Vercel](https://vercel.com).
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## 🚀 Features
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- 💿 **Token ID + URI Input** – Enter your token ID and IPFS JSON URI to mint NFTs
+- 🔥 **Burn NFTs** – Easily burn NFTs; only owners can burn
+- 🔍 **Live NFT Preview** – See the NFT preview before minting and burning
+- 🖼️ **NFT Gallery** – Displays all NFTs owned by the connected wallet (on my contract only)
+- 🌐 **IPFS Fallback Gateway** – Uses `https://nftstorage.link/ipfs/` for reliable image access
+- 🧙‍♂️ **MetaMask Wallet Integration**
+- 📦 Deployed on **Avalanche Fuji Testnet (or C-Chain)**
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 💻 Tech Stack
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+| Layer          | Tech                                                              |
+| -------------- | ----------------------------------------------------------------- |
+| Smart Contract | Solidity, OpenZeppelin (ERC721, Burnable, Enumerable, URIStorage) |
+| IDE            | Remix                                                             |
+| Frontend       | React.js, Ethers.js, IPFS                                         |
+| Wallet         | MetaMask                                                          |
+| Hosting        | Vercel                                                            |
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## 📷 Screenshots
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+| Website Preview                                 | Mint Preview                             | NFT Gallery                              | 
+| ----------------------------------------------- | ---------------------------------------- | ---------------------------------------- |
+| ![Website Preview](public/screens/website.png). | ![Mint Preview](public/screens/mint.png) | ![NFT Gallery](public/screens/gallery.png) |
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## ⚙️ Smart Contract
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Deployed via Remix using OpenZeppelin Contracts v5.
 
-## Learn More
+```solidity
+function safeMint(uint256 tokenId, string memory uri) public;
+function burn(uint256 tokenId) public; // Only owner
+function tokenOfOwnerByIndex(address owner, uint index) external view returns (uint256);
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+> 🔗 Contract Name: `Gunani`\
+> 🧠 Deployed to: **Avalanche Fuji Testnet / C-Chain**\
+> 📦 Contract Address: `0x1eb8F1a1d776B5DEE476e921325e217e0a11A62A`
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+## 🌐 Live App
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+> 🟢 https://nft-dapp-chi.vercel.app/    
+> Make sure MetaMask installed in your browser. 
+---
 
-### Analyzing the Bundle Size
+## 🛠️ How to Run Locally
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+1. **Clone the Repo**
 
-### Making a Progressive Web App
+```bash
+git clone https://github.com/mohit1221iitian/NFT-DApp.git
+cd NFT-DApp
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+2. **Install Dependencies**
 
-### Advanced Configuration
+```bash
+npm install
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+3. **Run the App**
 
-### Deployment
+```bash
+npm start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+> You must connect a MetaMask wallet on the same network as your deployed contract.
 
-### `npm run build` fails to minify
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 🌥️ IPFS Gateway Handling
+
+To avoid rate-limiting errors (`429 Too Many Requests`), the app automatically converts:
+
+```
+ipfs://Qm.../file.json
+```
+
+to:
+
+```
+https://nftstorage.link/ipfs/Qm.../file.json
+```
+if unavailable, it uses fallback :
+
+```
+https://cloudflare-ipfs.com/ipfs/Qm.../file.json
+```
+This ensures images and metadata load correctly under heavy traffic or network issues.
+
+---
+
+## 🧠 Known Limitations
+
+- Only NFTs minted through this specific contract will be visible in the gallery.
+- Some wallets may cache burnt NFTs temporarily even after they are removed on-chain.
+
+---
+
+## 🧱️ Problems I Faced During Development
+
+- ❌ **429 Too Many Requests** from Pinata gateway:\
+  → Solved by switching to NFT.storage and Cloudflare fallback.
+
+- ⚠️ **MetaMask not showing correct NFT state** after burning:\
+  → MetaMask caches NFTs; this was not an issue with the contract.
+
+- 🔍 **Invalid JSON error** while fetching metadata:\
+  → Happened when gateway returned HTML (e.g. rate-limited or offline). Resolved using proper IPFS URL parsing and proxy API.
+
+- 🦠 **Showing more NFTs in wallet than contract holds**:\
+  → Due to caching issues and wallet indexing, not a backend bug.
+
+- 💭 **Image not showing from `ipfs://` URIs**:\
+  → Solved by rewriting all URIs to nftstorage.link and cloudflare-ipfs.com.
+
+---
+
+## ✨ Future Improvements
+
+- 🎨 On-chain trait randomization
+- 📊 Rarity analysis & sorting in gallery
+- 📦 Batch minting support
+- 🎉 Cross-chain minting/bridging support
+
+---
+
+## 🙌 Credits
+
+- [OpenZeppelin Contracts](https://docs.openzeppelin.com/contracts)
+- [Remix IDE](https://remix.ethereum.org)
+- [IPFS](https://ipfs.tech)
+- [Cloudflare IPFS Gateway](https://developers.cloudflare.com/distributed-web/ipfs-gateway/)
+- [Avalanche C-Chain](https://avax.network)
+
+---
+
+## 📜 License
+
+MIT © mohit1221iitian
+
