@@ -63,7 +63,8 @@ function tokenOfOwnerByIndex(address owner, uint index) external view returns (u
 ## 🌐 Live App
 
 > 🟢 https://nft-dapp-chi.vercel.app/    
-> Make sure MetaMask installed in your browser. 
+**Make sure MetaMask installed in your browser.**
+**Make sure metamask running on Avalanche Fuji Testnet**
 ---
 
 ## 🛠️ How to Run Locally
